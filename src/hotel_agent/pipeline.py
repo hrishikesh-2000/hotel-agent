@@ -6,11 +6,21 @@ from hotel_agent.tools.search import web_search
 from hotel_agent.tools.fetch_async import fetch_pages_batch
 from hotel_agent.schemas import SearchPlan, VillaSearchResponse, VillaOffer, compute_match_score
 
-client = AsyncOpenAI(
-    api_key=os.environ.get("GEMINI_API_KEY"),
-    base_url="https://generativelanguage.googleapis.com/v1beta/openai/",
-)
 MODEL = "gemini-3.1-flash-lite"
+
+def get_async_client() -> AsyncOpenAI:
+    """Create a fresh AsyncOpenAI client bound to the current active event loop."""
+    api_key = os.environ.get("GEMINI_API_KEY")
+    if not api_key:
+        try:
+            import streamlit as st
+            api_key = st.secrets.get("GEMINI_API_KEY")
+        except Exception:
+            pass
+    return AsyncOpenAI(
+        api_key=api_key,
+        base_url="https://generativelanguage.googleapis.com/v1beta/openai/",
+    )
 
 async def build_search_plan(location: str, guests: int, requirements: str, strict_geo: bool) -> SearchPlan:
     geo_rule = (
@@ -29,11 +39,12 @@ async def build_search_plan(location: str, guests: int, requirements: str, stric
         "and specific micro-localities so we get maximum property coverage."
     )
 
-    resp = await client.beta.chat.completions.parse(
-        model=MODEL,
-        messages=[{"role": "user", "content": prompt}],
-        response_format=SearchPlan,
-    )
+    async with get_async_client() as client:
+        resp = await client.beta.chat.completions.parse(
+            model=MODEL,
+            messages=[{"role": "user", "content": prompt}],
+            response_format=SearchPlan,
+        )
     return resp.choices[0].message.parsed
 
 async def ingest_bronze_pages(queries: List[str], max_urls: int = 12) -> List[Dict[str, Any]]:
@@ -86,11 +97,12 @@ async def extract_silver_entities(
         f"SCRAPED CORPUS:\n{corpus}"
     )
 
-    resp = await client.beta.chat.completions.parse(
-        model=MODEL,
-        messages=[{"role": "user", "content": extraction_prompt}],
-        response_format=VillaSearchResponse,
-    )
+    async with get_async_client() as client:
+        resp = await client.beta.chat.completions.parse(
+            model=MODEL,
+            messages=[{"role": "user", "content": extraction_prompt}],
+            response_format=VillaSearchResponse,
+        )
     extracted = resp.choices[0].message.parsed.results
 
     excluded_lower = {ex.lower().strip() for ex in plan.excluded_regions} if strict_geo else set()
