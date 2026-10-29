@@ -2,6 +2,8 @@
 import sys
 import time
 import asyncio
+import logging
+import subprocess
 from pathlib import Path
 
 import pandas as pd
@@ -14,6 +16,21 @@ if str(SRC) not in sys.path:
 
 from hotel_agent.pipeline import build_search_plan, ingest_bronze_pages, extract_silver_entities
 
+logger = logging.getLogger("hotel_agent.streamlit")
+
+def get_git_build_meta():
+    branch = "unknown"
+    commit = "unknown"
+    try:
+        branch = subprocess.check_output(["git", "rev-parse", "--abbrev-ref", "HEAD"], cwd=ROOT, text=True).strip()
+        commit = subprocess.check_output(["git", "rev-parse", "--short", "HEAD"], cwd=ROOT, text=True).strip()
+    except Exception:
+        pass
+    return branch, commit
+
+BUILD_BRANCH, BUILD_COMMIT = get_git_build_meta()
+logger.info("Hotel app booted: branch=%s commit=%s", BUILD_BRANCH, BUILD_COMMIT)
+
 st.set_page_config(page_title="Medallion Villa Scout | Agentic ETL", page_icon="⚡", layout="wide")
 
 if not os.environ.get("GEMINI_API_KEY"):
@@ -22,6 +39,7 @@ if not os.environ.get("GEMINI_API_KEY"):
 
 st.title("⚡ Autonomous Villa & Hotel Scout")
 st.caption("Medallion Architecture (Plan → Bronze Parallel Scrape → Silver Entity Resolution → Gold Analytics)")
+st.caption(f"Build: {BUILD_BRANCH}@{BUILD_COMMIT}")
 
 with st.sidebar:
     st.header("🎯 Search Parameters")
