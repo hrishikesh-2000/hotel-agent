@@ -2,9 +2,9 @@ import os
 import json
 import asyncio
 from openai import AsyncOpenAI
-from search_tool import web_search
-from async_fetch import fetch_pages_batch
-from schemas import VillaSearchResponse
+from hotel_agent.tools.search import web_search
+from hotel_agent.tools.fetch_async import fetch_pages_batch
+from hotel_agent.schemas import VillaSearchResponse
 
 client = AsyncOpenAI(
     api_key=os.environ["GEMINI_API_KEY"],

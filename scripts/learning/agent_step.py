@@ -1,7 +1,7 @@
 import os
 import json
 from openai import OpenAI
-from search_tool import web_search
+from hotel_agent.tools.search import web_search 
 
 client = OpenAI(
     api_key=os.environ["GEMINI_API_KEY"],

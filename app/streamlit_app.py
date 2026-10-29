@@ -2,7 +2,7 @@
 import asyncio
 import pandas as pd
 import streamlit as st
-from pipeline import build_search_plan, ingest_bronze_pages, extract_silver_entities
+from hotel_agent.pipeline import build_search_plan, ingest_bronze_pages, extract_silver_entities
 
 st.set_page_config(page_title="Medallion Villa Scout | Agentic ETL", page_icon="⚡", layout="wide")
 

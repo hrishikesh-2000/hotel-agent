@@ -1,9 +1,9 @@
 import os
 import json
 from openai import OpenAI
-from search_tool import web_search
-from fetch_tool import fetch_page
-from schemas import VillaSearchResponse
+from hotel_agent.tools.search import web_search
+from hotel_agent.tools.fetch import fetch_page
+from hotel_agent.schemas import VillaSearchResponse
 
 client = OpenAI(
     api_key=os.environ["GEMINI_API_KEY"],
