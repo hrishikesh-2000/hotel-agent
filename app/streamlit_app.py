@@ -16,6 +16,10 @@ from hotel_agent.pipeline import build_search_plan, ingest_bronze_pages, extract
 
 st.set_page_config(page_title="Medallion Villa Scout | Agentic ETL", page_icon="⚡", layout="wide")
 
+if not os.environ.get("GEMINI_API_KEY"):
+    st.warning("Missing GEMINI_API_KEY. Add it in Streamlit Cloud → Secrets or set it in your local environment.")
+    st.stop()
+
 st.title("⚡ Autonomous Villa & Hotel Scout")
 st.caption("Medallion Architecture (Plan → Bronze Parallel Scrape → Silver Entity Resolution → Gold Analytics)")
 
@@ -33,7 +37,7 @@ with st.sidebar:
         help="When ON, blocks nearby outstation towns (e.g. drops Alibaug/Lonavala when searching Mumbai)."
     )
     max_urls = st.slider("Max Bronze Pages to Scrape", min_value=6, max_value=20, value=12, step=2)
-    run_btn = st.button("🚀 Run Agentic Pipeline", type="primary", use_container_width=True)
+    run_btn = st.button("🚀 Run Agentic Pipeline", type="primary", width="stretch")
 
 async def execute_medallion_pipeline(dest, guests, reqs, strict, url_limit, status_box):
     t0 = time.perf_counter()
@@ -57,10 +61,25 @@ async def execute_medallion_pipeline(dest, guests, reqs, strict, url_limit, stat
     elapsed = round(time.perf_counter() - t0, 1)
     return plan, pages, villas, elapsed
 
+def run_async_pipeline(dest, guests, reqs, strict, url_limit, status_box):
+    async def _run():
+        return await execute_medallion_pipeline(dest, guests, reqs, strict, url_limit, status_box)
+
+    try:
+        loop = asyncio.get_running_loop()
+    except RuntimeError:
+        return asyncio.run(_run())
+
+    new_loop = asyncio.new_event_loop()
+    try:
+        return new_loop.run_until_complete(_run())
+    finally:
+        new_loop.close()
+
 if run_btn:
     status_ui = st.status("Executing Medallion Agent Pipeline...", expanded=True)
-    plan, bronze_pages, silver_villas, duration = asyncio.run(
-        execute_medallion_pipeline(destination, adults, amenities, strict_geo, max_urls, status_ui)
+    plan, bronze_pages, silver_villas, duration = run_async_pipeline(
+        destination, adults, amenities, strict_geo, max_urls, status_ui
     )
     status_ui.update(label=f"Pipeline completed in {duration}s — Found {len(silver_villas)} verified properties", state="complete", expanded=False)
 
@@ -110,7 +129,7 @@ if run_btn:
                     "Match Score": st.column_config.ProgressColumn("Match Score", min_value=0, max_value=100, format="%d%%"),
                     "Booking Link": st.column_config.LinkColumn("Booking Link", display_text="Open Listing ↗"),
                 },
-                use_container_width=True,
+                width="stretch",
                 hide_index=True,
             )
             csv_data = df.to_csv(index=False).encode("utf-8")
@@ -136,4 +155,4 @@ if run_btn:
                         st.write(v.summary)
                         if v.amenities:
                             st.caption(" • ".join(v.amenities[:5]))
-                        st.link_button("View Listing ↗", v.booking_url, use_container_width=True)
+                        st.link_button("View Listing ↗", v.booking_url, width="stretch")
