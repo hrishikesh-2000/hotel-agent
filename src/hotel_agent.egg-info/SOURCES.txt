@@ -13,3 +13,4 @@ src/hotel_agent/tools/__init__.py
 src/hotel_agent/tools/fetch.py
 src/hotel_agent/tools/fetch_async.py
 src/hotel_agent/tools/search.py
+tests/test_schemas.py

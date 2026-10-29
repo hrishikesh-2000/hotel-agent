@@ -4,7 +4,7 @@ from typing import List, Dict, Any
 from openai import AsyncOpenAI
 from hotel_agent.tools.search import web_search
 from hotel_agent.tools.fetch_async import fetch_pages_batch
-from hotel_agent.schemas import SearchPlan, VillaSearchResponse, VillaOffer
+from hotel_agent.schemas import SearchPlan, VillaSearchResponse, VillaOffer, compute_match_score
 
 client = AsyncOpenAI(
     api_key=os.environ.get("GEMINI_API_KEY"),
@@ -108,6 +108,10 @@ async def extract_silver_entities(
         if norm_name not in seen_names:
             seen_names.add(norm_name)
             clean_results.append(villa)
+
+    budget_cap = 25000
+    for villa in clean_results:
+        villa.match_score = compute_match_score(villa, location, guests, budget_cap=budget_cap)
 
     clean_results.sort(key=lambda x: (-x.match_score, x.price_numeric or 9999999))
     return clean_results

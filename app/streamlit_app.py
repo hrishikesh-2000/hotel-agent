@@ -77,6 +77,7 @@ if run_btn:
         rows = []
         for v in silver_villas:
             per_person = f"₹{int(v.price_numeric / adults):,}" if v.price_numeric else "—"
+            pool_label = "✅" if v.private_pool == "yes" else "❓" if v.private_pool == "unknown" else "❌"
             rows.append({
                 "Property Name": v.name,
                 "Micro-Locality": v.micro_locality,
@@ -85,7 +86,7 @@ if run_btn:
                 "Max Guests": v.capacity or "—",
                 "Nightly Price": v.price_display,
                 f"Per Person ({adults}p)": per_person,
-                "Private Pool": "✅" if v.has_private_pool else "❌",
+                "Private Pool": pool_label,
                 "Match Score": v.match_score,
                 "Key Amenities": ", ".join(v.amenities[:4]),
                 "Booking Link": v.booking_url,
@@ -120,7 +121,8 @@ if run_btn:
                         else:
                             c2.markdown(f"**Guests:** `{v.capacity or 'N/A'}`")
 
-                        st.markdown(f"🏊 **Pool:** {'✅ Yes' if v.has_private_pool else '❌ No'}  •  🎯 **Match:** `{v.match_score}%`")
+                        pool_label = "✅ Yes" if v.private_pool == "yes" else "❓ Unknown" if v.private_pool == "unknown" else "❌ No"
+                        st.markdown(f"🏊 **Pool:** {pool_label}  •  🎯 **Match:** `{v.match_score}%`")
                         st.write(v.summary)
                         if v.amenities:
                             st.caption(" • ".join(v.amenities[:5]))

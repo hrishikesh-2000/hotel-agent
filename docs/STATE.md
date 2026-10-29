@@ -8,15 +8,27 @@ app/streamlit_app.py, scripts/learning/{hello,agent_step}.py, docs/
 ## Done
 - Project scaffold, files moved into src/hotel_agent, package installed editable.
 - Imports updated in agent_loop, agent_loop_async, pipeline, agent_step.
-- schemas.py imports OK; web_search runs from new location.
+- app import path corrected and verified in the virtualenv.
+- schema was hardened to replace bool-based private-pool logic with explicit `private_pool` values and evidence-based fields.
+- deterministic `compute_match_score()` was added so ranking is computed in Python instead of trusting model-generated score fields.
+- a regression test for schema contract and scoring was added and passed.
 
-## Unverified (run these first)
-python -c "import hotel_agent.agent_loop"
-python -c "import hotel_agent.agent_loop_async"
-python -c "import hotel_agent.pipeline"
-Also: app/streamlit_app.py line 5 must become
-`from hotel_agent.pipeline import build_search_plan, ingest_bronze_pages, extract_silver_entities`
-and pandas must be installed. Then commit.
+## Verification run
+- `python -c "import hotel_agent.schemas, hotel_agent.pipeline, hotel_agent.agent_loop, hotel_agent.agent_loop_async; print('OK')"` in the project venv returned `OK`.
+- `python -m pytest -q tests/test_schemas.py` -> `2 passed in 0.21s`.
+
+## Remaining issues
+- pipeline needs stricter geo filtering and a proper Karjat search script.
+- app still needs a dedicated date/budget/children input model if the search plan is to be fully realistic.
+
+## Done (latest)
+- Added Jina fallback to async fetch for placeholder/JavaScript pages.
+- Added and passed a regression test proving the fetcher retries when the page text is only a placeholder.
+
+## Next steps
+1. Tighten search plan and extraction logic with evidence-backed filtering.
+2. Write a Karjat search runner and print an evidence table.
+3. Add more fixture-based fetch tests for static and JS-heavy pages.
 
 ## Known problems (priority order)
 1. schemas.py: has_private_pool is a bool (unknown becomes False); match_score is
