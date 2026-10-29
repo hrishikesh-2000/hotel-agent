@@ -1,7 +1,17 @@
-﻿import time
+﻿import os
+import sys
+import time
 import asyncio
+from pathlib import Path
+
 import pandas as pd
 import streamlit as st
+
+ROOT = Path(__file__).resolve().parents[1]
+SRC = ROOT / "src"
+if str(SRC) not in sys.path:
+    sys.path.insert(0, str(SRC))
+
 from hotel_agent.pipeline import build_search_plan, ingest_bronze_pages, extract_silver_entities
 
 st.set_page_config(page_title="Medallion Villa Scout | Agentic ETL", page_icon="⚡", layout="wide")
